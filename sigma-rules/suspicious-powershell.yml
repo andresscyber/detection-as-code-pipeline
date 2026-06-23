@@ -1,0 +1,25 @@
+title: Suspicious PowerShell Execution
+id: 11111111-2222-3333-4444-555555555555
+status: experimental
+description: Detects potentially suspicious PowerShell execution
+author: Andres Sanchez
+date: 2026-06-22
+
+logsource:
+  product: windows
+  category: process_creation
+
+detection:
+  selection:
+    Image|endswith: '\powershell.exe'
+    CommandLine|contains:
+      - '-enc'
+      - 'EncodedCommand'
+      - 'IEX'
+  condition: selection
+
+level: high
+
+tags:
+  - attack.execution
+  - attack.t1059.001

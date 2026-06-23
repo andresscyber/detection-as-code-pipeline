@@ -1,0 +1,36 @@
+name: Sigma Rule Validation
+
+on:
+  push:
+    paths:
+      - 'sigma-rules/*.yml'
+
+  pull_request:
+    paths:
+      - 'sigma-rules/*.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Sigma CLI
+        run: |
+          pip install sigma-cli
+
+      - name: Display Sigma Version
+        run: |
+          sigma version
+
+      - name: Validate Rules
+        run: |
+          echo "Validating Sigma Rules..."
+          ls sigma-rules
