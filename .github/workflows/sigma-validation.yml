@@ -4,10 +4,14 @@ on:
   push:
     paths:
       - 'sigma-rules/*.yml'
+      - 'tests/*.json'
+      - '.github/workflows/*.yml'
 
   pull_request:
     paths:
       - 'sigma-rules/*.yml'
+      - 'tests/*.json'
+      - '.github/workflows/*.yml'
 
 jobs:
   validate:
@@ -22,15 +26,24 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install Sigma CLI
+      - name: Install Validation Tools
         run: |
-          pip install sigma-cli
+          pip install sigma-cli yamllint
 
       - name: Display Sigma Version
         run: |
           sigma version
 
-      - name: Validate Rules
+      - name: Validate YAML Formatting
+        run: |
+          yamllint sigma-rules/
+
+      - name: List Test Telemetry
+        run: |
+          echo "Available test telemetry files:"
+          ls tests/
+
+      - name: Validate Sigma Rules
         run: |
           echo "Validating Sigma Rules..."
-          ls sigma-rules
+          ls sigma-rules/

@@ -1,0 +1,10 @@
+{
+  "EventID": 4688,
+  "Provider": "Microsoft-Windows-Security-Auditing",
+  "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+  "CommandLine": "powershell.exe -NoProfile -ExecutionPolicy Bypass -enc SQBFAFgA",
+  "ParentImage": "C:\\Windows\\explorer.exe",
+  "User": "LAB\\testuser",
+  "Host": "WIN10-ENDPOINT",
+  "DetectionPurpose": "Mock telemetry used to test suspicious encoded PowerShell execution logic"
+}
