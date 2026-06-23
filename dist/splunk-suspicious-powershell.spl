@@ -1,0 +1,3 @@
+index=windows sourcetype=XmlWinEventLog:Microsoft-Windows-Sysmon/Operational
+Image="*\\powershell.exe"
+(CommandLine="*-enc*" OR CommandLine="*EncodedCommand*" OR CommandLine="*IEX*")
