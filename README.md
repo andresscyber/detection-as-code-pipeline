@@ -2,11 +2,11 @@
 
 ## Overview
 
-This project demonstrates a Detection-as-Code workflow using Sigma detection rules, Git version control, GitHub Actions, YAML linting, mock test telemetry, and automated CI/CD validation.
+This project demonstrates a Detection-as-Code (DaC) workflow using Sigma detection rules, Git version control, GitHub Actions, YAML linting, mock telemetry, and automated CI/CD validation.
 
-The repository simulates a modern Detection Engineering process where security detections are managed as code, tracked through version control, validated through automation, and continuously improved through structured security engineering workflows.
+The repository simulates a modern Detection Engineering process where security detections are managed as code, tracked through version control, automatically validated through CI/CD pipelines, and converted into platform-specific detections for security monitoring solutions.
 
-By treating detections as code, security teams can improve detection quality, reduce manual errors, enforce consistency, and create repeatable workflows before detections are deployed into SIEM or EDR platforms.
+By treating detections as code, organizations can improve detection quality, reduce deployment errors, enforce consistency, and automate validation before deployment into production SIEM or EDR environments.
 
 ---
 
@@ -15,11 +15,12 @@ By treating detections as code, security teams can improve detection quality, re
 - Develop Sigma-based security detections
 - Implement Detection-as-Code methodology
 - Use Git and GitHub for version control
-- Automate detection validation with GitHub Actions
+- Automate detection validation using GitHub Actions
 - Validate YAML formatting with yamllint
 - Maintain mock telemetry for detection testing
-- Map detection logic to MITRE ATT&CK
-- Demonstrate CI/CD practices for security content
+- Convert Sigma detections into SIEM-specific queries
+- Map detections to the MITRE ATT&CK framework
+- Demonstrate CI/CD practices for detection engineering
 
 ---
 
@@ -56,16 +57,18 @@ By treating detections as code, security teams can improve detection quality, re
 ## Technologies Used
 
 | Technology | Purpose |
-|---|---|
+|------------|----------|
 | Sigma | Detection rule development |
-| Sigma CLI | Rule testing and validation |
-| yamllint | YAML formatting validation |
+| Sigma CLI | Rule validation |
+| yamllint | YAML validation |
 | Git | Version control |
 | GitHub | Source code management |
 | GitHub Actions | CI/CD automation |
 | YAML | Detection rule format |
-| JSON | Mock test telemetry |
-| MITRE ATT&CK | Threat technique mapping |
+| JSON | Test telemetry |
+| Splunk SPL | Detection conversion |
+| Microsoft Sentinel KQL | Detection conversion |
+| MITRE ATT&CK | Threat mapping |
 
 ---
 
@@ -84,6 +87,10 @@ detection-as-code-pipeline
 ├── tests
 │   └── powershell-test-event.json
 │
+├── dist
+│   ├── splunk-suspicious-powershell.spl
+│   └── sentinel-suspicious-powershell.kql
+│
 ├── screenshots
 │
 └── README.md
@@ -93,7 +100,7 @@ detection-as-code-pipeline
 
 ## Sigma Detection Rule
 
-The project includes a Sigma detection designed to identify suspicious PowerShell execution.
+The project includes a Sigma detection designed to identify suspicious PowerShell execution activity.
 
 ### Detection Logic
 
@@ -109,15 +116,15 @@ CommandLine|contains:
 ### Detection Focus
 
 - Encoded PowerShell execution
-- Suspicious command-line usage
-- Script execution through PowerShell
+- Obfuscated command execution
+- In-memory script execution
 - MITRE ATT&CK T1059.001
 
 ---
 
 ## Mock Test Telemetry
 
-The `tests` directory includes a mock Windows process creation event used to represent suspicious encoded PowerShell execution.
+The `tests` directory contains mock Windows process creation telemetry used to represent suspicious encoded PowerShell execution activity.
 
 ```json
 {
@@ -127,26 +134,77 @@ The `tests` directory includes a mock Windows process creation event used to rep
   "CommandLine": "powershell.exe -NoProfile -ExecutionPolicy Bypass -enc SQBFAFgA",
   "ParentImage": "C:\\Windows\\explorer.exe",
   "User": "LAB\\testuser",
-  "Host": "WIN10-ENDPOINT",
-  "DetectionPurpose": "Mock telemetry used to test suspicious encoded PowerShell execution logic"
+  "Host": "WIN10-ENDPOINT"
 }
 ```
 
 ---
 
+## Detection Portability
+
+One of Sigma's primary advantages is the ability to create platform-agnostic detections.
+
+To demonstrate portability, the Sigma rule was converted into equivalent queries for multiple SIEM platforms.
+
+### Splunk SPL
+
+```spl
+index=windows sourcetype=XmlWinEventLog:Microsoft-Windows-Sysmon/Operational
+Image="*\\powershell.exe"
+(CommandLine="*-enc*" OR CommandLine="*EncodedCommand*" OR CommandLine="*IEX*")
+```
+
+### Microsoft Sentinel KQL
+
+```kql
+DeviceProcessEvents
+| where FileName =~ "powershell.exe"
+| where ProcessCommandLine has_any ("-enc", "EncodedCommand", "IEX")
+```
+
+### Converted Query Examples
+
+![Converted Queries](screenshots/06-final-readme/01-dist-converted-queries.png)
+
+---
+
 ## GitHub Actions Workflow
 
-The GitHub Actions pipeline automatically runs when Sigma rules, test telemetry, or workflow files are modified.
+The GitHub Actions workflow automatically executes when Sigma rules, test telemetry, or workflow files are modified.
 
-### CI/CD Validation Steps
+### CI/CD Validation Tasks
 
 - Checkout repository
 - Install Python
-- Install Sigma CLI and yamllint
-- Display Sigma CLI version
+- Install Sigma CLI
+- Install yamllint
 - Validate YAML formatting
-- List available test telemetry
-- Validate Sigma rule repository contents
+- Validate Sigma rule repository
+- Verify test telemetry availability
+
+### Workflow Process
+
+```text
+Sigma Rule Modified
+        │
+        ▼
+Git Commit
+        │
+        ▼
+Git Push
+        │
+        ▼
+GitHub Actions Triggered
+        │
+        ▼
+YAML Validation
+        │
+        ▼
+Sigma Validation
+        │
+        ▼
+Workflow Result
+```
 
 ---
 
@@ -194,11 +252,11 @@ The GitHub Actions pipeline automatically runs when Sigma rules, test telemetry,
 
 ### GitHub Actions Configuration
 
-#### Initial Workflow Configuration
+#### GitHub Actions Workflow
 
 ![GitHub Actions Workflow](screenshots/04-github-actions/01-github-actions-workflow.png)
 
-#### YAML Linting Workflow Update
+#### YAML Linting Update
 
 ![YAML Linting Workflow](screenshots/04-github-actions/02-yamllint-workflow-update.png)
 
@@ -218,13 +276,9 @@ The GitHub Actions pipeline automatically runs when Sigma rules, test telemetry,
 
 ![Repository Upload](screenshots/05-pipeline-results/03-repository-uploaded.png)
 
-#### Workflow Directory Fix
+#### GitHub Actions Workflow Detection
 
-![Workflow Directory Fix](screenshots/05-pipeline-results/05-workflow-directory-fix.png)
-
-#### GitHub Actions Workflow Detected
-
-![Workflow Detected](screenshots/05-pipeline-results/06-github-actions-workflow-detected.png)
+![Workflow Detection](screenshots/05-pipeline-results/06-github-actions-workflow-detected.png)
 
 #### Successful Workflow Execution
 
@@ -234,20 +288,12 @@ The GitHub Actions pipeline automatically runs when Sigma rules, test telemetry,
 
 ![Workflow Details](screenshots/05-pipeline-results/08-workflow-details-success.png)
 
-#### YAML Linting Workflow Run
-
-![YAML Linting Workflow Run](screenshots/05-pipeline-results/08-yamllint-workflow-run.png)
-
-#### YAML Linting Workflow Success
-
-![YAML Linting Workflow Success](screenshots/05-pipeline-results/09-yamllint-workflow-success.png)
-
 ---
 
 ## MITRE ATT&CK Mapping
 
 | Technique | Description |
-|---|---|
+|------------|-------------|
 | T1059.001 | PowerShell |
 | T1027 | Obfuscated Files or Information |
 | T1140 | Deobfuscate/Decode Files or Information |
@@ -258,55 +304,54 @@ The GitHub Actions pipeline automatically runs when Sigma rules, test telemetry,
 
 ### Detection Engineering
 
-- Sigma rule development
-- Suspicious PowerShell detection
-- Detection logic creation
-- ATT&CK mapping
-- Rule validation workflow
+- Sigma Rule Development
+- Detection-as-Code
+- ATT&CK Mapping
+- Detection Validation
+- Detection Portability
 
 ### DevSecOps
 
-- Git version control
-- GitHub repository management
-- GitHub Actions CI/CD
-- YAML linting
-- Automated validation
+- Git
+- GitHub
+- GitHub Actions
+- CI/CD Pipelines
+- YAML Validation
 
 ### Security Operations
 
-- PowerShell monitoring
-- Process creation analysis
-- Mock telemetry validation
-- Detection lifecycle management
+- PowerShell Detection
+- Threat Detection
+- Process Creation Analysis
+- Mock Telemetry Testing
 
 ---
 
 ## Results
 
-Successfully built a Detection-as-Code pipeline that:
+Successfully developed a Detection-as-Code pipeline capable of:
 
-- Stores detection rules in version control
-- Uses Sigma for portable detection logic
-- Uses mock telemetry for detection testing context
-- Runs GitHub Actions on detection updates
-- Validates YAML formatting with yamllint
-- Demonstrates CI/CD practices for security detections
-- Maps detection logic to MITRE ATT&CK
+- Managing security detections through version control
+- Automating validation through GitHub Actions
+- Enforcing YAML quality standards with yamllint
+- Maintaining test telemetry for validation workflows
+- Converting Sigma detections into Splunk and Sentinel queries
+- Demonstrating CI/CD practices used by Detection Engineering teams
 
 ---
 
 ## Future Enhancements
 
-- Add additional Sigma detections
-- Add Splunk SPL conversion
-- Add Microsoft Sentinel KQL conversion
-- Add pull request branch protection
-- Add automated detection test cases
-- Add detection coverage reporting
-- Integrate with SIEM deployment workflows
+- Additional Sigma detections
+- Automated Sigma linting
+- Detection coverage reporting
+- Pull request approval workflows
+- Splunk deployment integration
+- Microsoft Sentinel deployment integration
+- Automated detection testing
 
 ---
 
 ## Resume Bullet
 
-> Designed and implemented a Detection-as-Code pipeline using Git, Sigma, yamllint, and GitHub Actions to automate validation of security detections, enforce MITRE ATT&CK alignment, and apply CI/CD practices to detection engineering workflows.
+> Designed and implemented a Detection-as-Code pipeline using Git, Sigma, yamllint, and GitHub Actions to automate validation of security detections, enforce MITRE ATT&CK alignment, and apply CI/CD practices to modern detection engineering workflows.
